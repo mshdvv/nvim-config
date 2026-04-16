@@ -107,7 +107,6 @@ require("lazy").setup({
     },
   },
 
-
   {
     'neovim/nvim-lspconfig',
     dependencies = { 'saghen/blink.cmp' },
@@ -136,7 +135,6 @@ require("lazy").setup({
       vim.lsp.enable('clangd')
     end
   },
-
 
   { 
     'nvim-tree/nvim-tree.lua', 
@@ -343,7 +341,8 @@ require("lazy").setup({
   { 'karb94/neoscroll.nvim', config = true },  
   { 'lewis6991/gitsigns.nvim', config = true },  
   { 'windwp/nvim-autopairs', event = "InsertEnter", config = true },
-  { "kylechui/nvim-surround", version = "^4.0.0", event = "VeryLazy", }
+  { "kylechui/nvim-surround", version = "^4.0.0", event = "VeryLazy", },
+  { 'wakatime/vim-wakatime', lazy = false }
 
 })
 
