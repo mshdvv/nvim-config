@@ -80,23 +80,6 @@ key('n', '<leader>t', '<cmd>ToggleTerm direction=horizontal size=15<cr>')
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", "--branch=stable", lazypath })
-end
-vim.opt.rtp:prepend(lazypath)
-
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git", "clone", "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable",
-    lazypath,
-  })
-end
-vim.opt.rtp:prepend(lazypath)
-
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
     "git", "clone", "--filter=blob:none",
     "https://github.com/folke/lazy.nvim.git",
@@ -107,9 +90,9 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  { 
-    'sainnhe/gruvbox-material', 
-    priority = 1000, 
+  {
+    'sainnhe/gruvbox-material',
+    priority = 1000,
     config = function()
       vim.g.gruvbox_material_better_performance = 1
       vim.g.gruvbox_material_foreground = 'original'
@@ -130,41 +113,37 @@ require("lazy").setup({
   },
 
   {
-    'neovim/nvim-lspconfig',
-    dependencies = { 'saghen/blink.cmp' },
-    config = function()
-      local blink = require('blink.cmp')
-      local capabilities = blink.get_lsp_capabilities()
+  'neovim/nvim-lspconfig',
+  dependencies = { 'saghen/blink.cmp' },
+  config = function()
+    local blink = require('blink.cmp')
+    local capabilities = blink.get_lsp_capabilities()
 
-      local function setup(server, opts)
-	opts = opts or {}
-	opts.capabilities = capabilities
-	vim.lsp.config(server, opts)
-	vim.lsp.enable(server)
-      end
-
-      setup('clangd', {
-	cmd = { "clangd", "--background-index", "--clang-tidy" },
-	root_dir = function(bufnr)
-	  local fname = vim.api.nvim_buf_get_name(bufnr)
-	  local root = vim.fs.root(fname, {
-	    'compile_commands.json',
-	    'compile_flags.txt',
-	    '.clangd',
-	    '.git',
-	  })
-	  return root or vim.fn.getcwd()
-	end,
-      })
-
-      setup('tsserver')
-      setup('rust_analyzer')
-      setup('lua_ls')
+    local function setup(server, opts)
+      opts = opts or {}
+      opts.capabilities = capabilities
+      vim.lsp.config(server, opts)
+      vim.lsp.enable(server)
     end
-  },
 
-  { 
-    'nvim-tree/nvim-tree.lua', 
+    setup('clangd', {
+      cmd = { "clangd", "--background-index", "--clang-tidy" },
+      root_dir = vim.fs.root(0, {
+        'compile_commands.json',
+        'compile_flags.txt',
+        '.clangd',
+        '.git',
+      }),
+    })
+
+    setup('ts_ls')
+    setup('rust_analyzer')
+    setup('lua_ls')
+  end
+},
+
+  {
+    'nvim-tree/nvim-tree.lua',
     opts = {
       actions = {
 	open_file = {
@@ -187,12 +166,12 @@ require("lazy").setup({
 	indent_markers = { enable = true },
       },
       filters = { dotfiles = false },
-    } 
+    }
   },
 
-  { 
-    'akinsho/toggleterm.nvim', 
-    version = "*", 
+  {
+    'akinsho/toggleterm.nvim',
+    version = "*",
     opts = {
       direction = "float",
       float_opts = {
@@ -201,7 +180,7 @@ require("lazy").setup({
 	height = 28,
 	winblend = 15,
       },
-    } 
+    }
   },
 
   {
@@ -210,31 +189,22 @@ require("lazy").setup({
     opts = {},
   },
 
-  { 
+  {
     'nvim-lualine/lualine.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' }, 
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
     opts = {}
   },
 
   {
     'nvim-treesitter/nvim-treesitter',
-    branch = 'master',
     build = ':TSUpdate',
     lazy = false,
     config = function()
-      require('nvim-treesitter.configs').setup({
-	ensure_installed = {
-	  'c','lua','vim','vimdoc',
-	  'javascript','typescript','rust',
-	  'markdown','markdown_inline',
-	},
-	highlight = { enable = true },
-	indent = { enable = true },
-      })
-    end
+      require('nvim-treesitter').install({ 'c', 'lua', 'rust', 'javascript', 'markdown', 'markdown_inline' })
+    end,
   },
 
-  { 
+  {
     'MeanderingProgrammer/render-markdown.nvim',
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' },
     opts = {},
@@ -253,6 +223,23 @@ require("lazy").setup({
     }
   })
 
+
 -- shitty color fix :D
 
 vim.api.nvim_set_hl(0, "EndOfBuffer", { fg = "#191919" })
+
+-- treesitter nvim
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { "c", "lua", "rust", "javascript", "markdown" },
+  callback = function()
+    vim.treesitter.start()
+    vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+  end,
+})
+
+vim.diagnostic.config({
+  float = { border = 'rounded' },
+  virtual_text = true,
+  severity_sort = true,
+})
