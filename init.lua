@@ -1,5 +1,5 @@
 -- Neovim basic config :D
--- Author: msh/mshdevv@gmail.com
+-- msh/mshdevv@gmail.com
 
 local opt = vim.opt
 
@@ -337,6 +337,7 @@ require("lazy").setup({
     extensions = {}
 
   } },
+  { 'MeanderingProgrammer/render-markdown.nvim', dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, opts = {}, },
   { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'karb94/neoscroll.nvim', config = true },  
   { 'lewis6991/gitsigns.nvim', config = true },  
