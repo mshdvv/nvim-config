@@ -84,6 +84,28 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
 require("lazy").setup({
   { 
     'sainnhe/gruvbox-material', 
@@ -103,7 +125,7 @@ require("lazy").setup({
     opts = {
       keymap = { preset = 'default' },
       sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
-      completion = { documentation = { auto_show = true, auto_show_delay_ms = 200, }, },
+      completion = { documentation = { auto_show = true, auto_show_delay_ms = 200 } },
     },
   },
 
@@ -112,27 +134,32 @@ require("lazy").setup({
     dependencies = { 'saghen/blink.cmp' },
     config = function()
       local blink = require('blink.cmp')
+      local capabilities = blink.get_lsp_capabilities()
 
-      vim.lsp.config('clangd', {
-	capabilities = blink.get_lsp_capabilities(),
+      local function setup(server, opts)
+	opts = opts or {}
+	opts.capabilities = capabilities
+	vim.lsp.config(server, opts)
+	vim.lsp.enable(server)
+      end
 
+      setup('clangd', {
 	cmd = { "clangd", "--background-index", "--clang-tidy" },
-
 	root_dir = function(bufnr)
 	  local fname = vim.api.nvim_buf_get_name(bufnr)
-
 	  local root = vim.fs.root(fname, {
 	    'compile_commands.json',
 	    'compile_flags.txt',
 	    '.clangd',
 	    '.git',
 	  })
-
 	  return root or vim.fn.getcwd()
 	end,
       })
 
-      vim.lsp.enable('clangd')
+      setup('tsserver')
+      setup('rust_analyzer')
+      setup('lua_ls')
     end
   },
 
@@ -144,7 +171,6 @@ require("lazy").setup({
 	  quit_on_open = true,
 	},
       },
-
       view = {
 	centralize_selection = true,
 	cursorline = true,
@@ -155,113 +181,25 @@ require("lazy").setup({
 	relativenumber = false,
 	signcolumn = "yes",
 	width = 35,
-	float = {
-	  enable = false,
-	  quit_on_focus_loss = true,
-	  open_win_config = {
-	    relative = "editor",
-	    border = "rounded",
-	    width = 30,
-	    height = 30,
-	    row = 1,
-	    col = 1,
-	  },
-	},
       },
-
       renderer = {
 	group_empty = true,
-
-	indent_markers = {
-	  enable = true;
-	},
-
-	icons = {
-	  web_devicons = {
-	    file = {
-	      enable = true,
-	      color = true,
-	    },
-	    folder = {
-	      enable = false,
-	      color = true,
-	    },
-	  },
-	  git_placement = "after",
-	  modified_placement = "after",
-	  diagnostics_placement = "signcolumn",
-	  bookmarks_placement = "signcolumn",
-	  padding = " ",
-	  symlink_arrow = " -> ",
-	  show = {
-	    file = true,
-	    folder = true,
-	    folder_arrow = true,
-	    git = true,
-	    modified = true,
-	    diagnostics = true,
-	    bookmarks = true,
-	  },
-	  glyphs = {
-	    default = "",
-	    symlink = "",
-	    bookmark = "󰆤",
-	    modified = "●",
-	    folder = {
-	      arrow_closed = "",
-	      arrow_open = "",
-	      default = "",
-	      open = "",
-	      empty = "",
-	      empty_open = "",
-	      symlink = "",
-	      symlink_open = "",
-	    },
-	    git = {
-	      unstaged = "✗",
-	      staged = "✓",
-	      unmerged = "",
-	      renamed = "➜",
-	      untracked = "★",
-	      deleted = "",
-	      ignored = "◌",
-	    },
-	  },
-	},
+	indent_markers = { enable = true },
       },
-
-      filters = {
-	dotfiles = false,
-      },
+      filters = { dotfiles = false },
     } 
   },
 
   { 
     'akinsho/toggleterm.nvim', 
     version = "*", 
-    opts = { 
-      size = 20,
-      open_mapping = [[<c-\>]],
-      hide_numbers = true,
-      shade_filetypes = {},
-      shade_terminals = true,
-      shading_factor = 2,
-      start_in_insert = true,
-      insert_mappings = true,
-      persist_size = true,
+    opts = {
       direction = "float",
-      close_on_exit = true,
-      shell = vim.o.shell,
       float_opts = {
 	border = "rounded",
-	winblend = 0,
 	width = 88,
 	height = 28,
 	winblend = 15,
-	highlights = {
-	  border = "Normal",
-	  background = "Normal",
-	},
       },
     } 
   },
@@ -272,80 +210,48 @@ require("lazy").setup({
     opts = {},
   },
 
-  { 'nvim-lualine/lualine.nvim',
-  dependencies = { 'nvim-tree/nvim-web-devicons' }, 
-  opts = {
-    options = {
-      icons_enabled = true,
-      theme = 'auto',
-      component_separators = { left = '', right = ''},
-      section_separators = { left = '', right = ''},
-      disabled_filetypes = {
-	statusline = {},
-	winbar = {},
-      },
-      ignore_focus = {},
-      always_divide_middle = true,
-      globalstatus = false,
-      refresh = {
-	statusline = 1000,
-	tabline=1000,
-	winbar = 1000,
-	refresh_time = 16, -- ~60fps
-      }
-    },
-    sections = {
-      lualine_a = {'mode'},
-      lualine_b = {'branch', 'diff', 'diagnostics'},
-      lualine_c = {'filename'},
-      lualine_x = {'encoding','filetype', 'hostname'},
-      lualine_y = {'progress'},
-      lualine_z = {'location', 'lsp_status'}
-    },
-    inactive_sections = {
-      lualine_a = {},
-      lualine_b = {'filename'},
-      lualine_c = {'branch', 'diff', 'diagnostics'},
-      lualine_x = {'filetype'},
-      lualine_y = {'location'},
-      lualine_z = {}
-    },
-    tabline = {
-      lualine_a = {'buffers'},
-      lualine_b = {},
-      lualine_c = {},
-      lualine_x = {},
-      lualine_y = {},
-      lualine_z = {'tabs'}
-    },
-    winbar = { 
-      lualine_a = {{'filename', path = 4}},
-      lualine_b = {},
-      lualine_c = {},
-      lualine_x = {},
-      lualine_y = {},
-      lualine_z = {}
-    },
-    inactive_winbar = { 
-      lualine_a = {{'filename', path = 4}},
-      lualine_b = {},
-      lualine_c = {},
-      lualine_x = {},
-      lualine_y = {},
-      lualine_z = {}
-    },
-    extensions = {}
+  { 
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' }, 
+    opts = {}
+  },
 
-  } },
-  { 'MeanderingProgrammer/render-markdown.nvim', dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, opts = {}, },
+  {
+    'nvim-treesitter/nvim-treesitter',
+    branch = 'master',
+    build = ':TSUpdate',
+    lazy = false,
+    config = function()
+      require('nvim-treesitter.configs').setup({
+	ensure_installed = {
+	  'c','lua','vim','vimdoc',
+	  'javascript','typescript','rust',
+	  'markdown','markdown_inline',
+	},
+	highlight = { enable = true },
+	indent = { enable = true },
+      })
+    end
+  },
+
+  { 
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' },
+    opts = {},
+  },
+
   { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
-  { 'karb94/neoscroll.nvim', config = true },  
-  { 'lewis6991/gitsigns.nvim', config = true },  
+  { 'karb94/neoscroll.nvim', config = true },
+  { 'lewis6991/gitsigns.nvim', config = true },
   { 'windwp/nvim-autopairs', event = "InsertEnter", config = true },
-  { "kylechui/nvim-surround", version = "^4.0.0", event = "VeryLazy", },
+  { "kylechui/nvim-surround", version = "^4.0.0", event = "VeryLazy" },
   { 'wakatime/vim-wakatime', lazy = false }
 
-})
+}, {
+    rocks = {
+      enabled = false,
+    }
+  })
 
 -- shitty color fix :D
 
