@@ -87,6 +87,7 @@ if not vim.loop.fs_stat(lazypath) then
     lazypath,
   })
 end
+
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
@@ -113,74 +114,44 @@ require("lazy").setup({
   },
 
   {
-  'neovim/nvim-lspconfig',
-  dependencies = { 'saghen/blink.cmp' },
-  config = function()
-    local blink = require('blink.cmp')
-    local capabilities = blink.get_lsp_capabilities()
+    'neovim/nvim-lspconfig',
+    dependencies = { 'saghen/blink.cmp' },
+    config = function()
+      local blink = require('blink.cmp')
+      local capabilities = blink.get_lsp_capabilities()
 
-    local function setup(server, opts)
-      opts = opts or {}
-      opts.capabilities = capabilities
-      vim.lsp.config(server, opts)
-      vim.lsp.enable(server)
+      local function setup(server, opts)
+	opts = opts or {}
+	opts.capabilities = capabilities
+	vim.lsp.config(server, opts)
+	vim.lsp.enable(server)
+      end
+
+      setup('clangd', {
+	cmd = { "clangd", "--background-index", "--clang-tidy" },
+	root_dir = vim.fs.root(0, {
+	  'compile_commands.json',
+	  'compile_flags.txt',
+	  '.clangd',
+	  '.git',
+	}),
+      })
+
+      setup('ts_ls')
+      setup('rust_analyzer')
+      setup('lua_ls')
     end
-
-    setup('clangd', {
-      cmd = { "clangd", "--background-index", "--clang-tidy" },
-      root_dir = vim.fs.root(0, {
-        'compile_commands.json',
-        'compile_flags.txt',
-        '.clangd',
-        '.git',
-      }),
-    })
-
-    setup('ts_ls')
-    setup('rust_analyzer')
-    setup('lua_ls')
-  end
-},
+  },
 
   {
     'nvim-tree/nvim-tree.lua',
-    opts = {
-      actions = {
-	open_file = {
-	  quit_on_open = true,
-	},
-      },
-      view = {
-	centralize_selection = true,
-	cursorline = true,
-	debounce_delay = 15,
-	side = "left",
-	preserve_window_proportions = false,
-	number = false,
-	relativenumber = false,
-	signcolumn = "yes",
-	width = 35,
-      },
-      renderer = {
-	group_empty = true,
-	indent_markers = { enable = true },
-      },
-      filters = { dotfiles = false },
-    }
+    opts = { actions = { open_file = { quit_on_open = true, }, }, view = { centralize_selection = true, cursorline = true, debounce_delay = 15, side = "left", preserve_window_proportions = false, number = false, relativenumber = false, signcolumn = "yes", width = 35, }, renderer = { group_empty = true, indent_markers = { enable = true }, }, filters = { dotfiles = false }, }
   },
 
   {
     'akinsho/toggleterm.nvim',
     version = "*",
-    opts = {
-      direction = "float",
-      float_opts = {
-	border = "rounded",
-	width = 88,
-	height = 28,
-	winblend = 15,
-      },
-    }
+    opts = { direction = "float", float_opts = { border = "rounded", width = 88, height = 28, winblend = 15, }, }
   },
 
   {
@@ -192,7 +163,15 @@ require("lazy").setup({
   {
     'nvim-lualine/lualine.nvim',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
-    opts = {}
+    opts = {
+      options = { icons_enabled = true, theme = 'auto', component_separators = { left = '', right = ''}, section_separators = { left = '', right = ''}, disabled_filetypes = { statusline = {}, winbar = {}, }, ignore_focus = {}, always_divide_middle = true, globalstatus = false, refresh = { statusline = 1000, tabline=1000, winbar = 1000, refresh_time = 16, } },
+      sections = { lualine_a = {'mode'}, lualine_b = {'branch', 'diff', 'diagnostics'}, lualine_c = {'filetype','filename'}, lualine_x = {'hostname','encoding','filesize'}, lualine_y = {'progress'}, lualine_z = {'location'} },
+      inactive_sections = { lualine_a = {'branch', 'diff', 'diagnostics'}, lualine_b = {'filetype','filename'}, lualine_c = {}, lualine_y = {'location'}, lualine_z = {} },
+      tabline = { lualine_a = {'buffers'}, lualine_b = {}, lualine_c = {}, lualine_x = {}, lualine_y = {}, lualine_z = {'tabs'} },
+      winbar = { lualine_a = {{'filename', path = 4}}, lualine_b = {}, lualine_c = {}, lualine_x = {}, lualine_y = {}, lualine_z = {} },
+      inactive_winbar = { lualine_a = {{'filename', path = 4}}, lualine_b = {}, lualine_c = {}, lualine_x = {}, lualine_y = {}, lualine_z = {} },
+      extensions = {}
+    }
   },
 
   {
@@ -217,11 +196,7 @@ require("lazy").setup({
   { "kylechui/nvim-surround", version = "^4.0.0", event = "VeryLazy" },
   { 'wakatime/vim-wakatime', lazy = false }
 
-}, {
-    rocks = {
-      enabled = false,
-    }
-  })
+},{ rocks = { enabled = false, } })
 
 
 -- shitty color fix :D
@@ -243,3 +218,5 @@ vim.diagnostic.config({
   virtual_text = true,
   severity_sort = true,
 })
+
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'error show' })
